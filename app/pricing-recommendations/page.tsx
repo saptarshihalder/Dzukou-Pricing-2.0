@@ -28,6 +28,22 @@ import {
 import { usePriceOptimization } from "@/lib/hooks";
 import { formatters, handleApiError } from "@/lib/api";
 
+interface PsychologicalAnalysis {
+  price_change: number;
+  price_change_percent: number;
+  left_digit_changed: boolean;
+  original_ending: number;
+  psych_ending: number;
+  psychological_effects: string[];
+  behavioral_score: number;
+  category_factors: {
+    price_sensitivity: string;
+    brand_importance: string;
+  };
+  consumer_perception: string;
+  recommendation_strength: string;
+}
+
 interface ExtendedPriceRecommendation {
   product_id: string;
   current_price: number;
@@ -37,9 +53,21 @@ interface ExtendedPriceRecommendation {
   risk_level: "low" | "medium" | "high";
   confidence_score: number;
   scenarios: {
-    conservative: { price: number; expected_margin: number };
-    recommended: { price: number; expected_margin: number };
-    aggressive: { price: number; expected_margin: number };
+    conservative: { 
+      price: number; 
+      expected_margin: number;
+      psychological_analysis?: PsychologicalAnalysis;
+    };
+    recommended: { 
+      price: number; 
+      expected_margin: number;
+      psychological_analysis?: PsychologicalAnalysis;
+    };
+    aggressive: { 
+      price: number; 
+      expected_margin: number;
+      psychological_analysis?: PsychologicalAnalysis;
+    };
   };
   rationale: string;
   rationale_sections?: {
@@ -47,6 +75,8 @@ interface ExtendedPriceRecommendation {
     llm_insights?: string;
   };
   constraint_flags: string[];
+  psychological_analysis?: PsychologicalAnalysis;
+  psychological_pricing_enabled: boolean;
 }
 
 export default function PricingRecommendationsPage() {
@@ -96,12 +126,22 @@ export default function PricingRecommendationsPage() {
   const runBatchOptimization = async (forceRefresh: boolean = false) => {
     try {
       setError(null);
-      await optimizeBatch(undefined, {
+      console.log('Starting batch optimization...', {
+        forceRefresh,
+        useCache: !forceRefresh && useCache,
+        cacheMaxAge,
+        enablePsychologicalPricing
+      });
+      
+      const result = await optimizeBatch(undefined, {
         min_margin_percent: 30,
         max_price_increase_percent: 25,
         psychological_pricing: enablePsychologicalPricing
       }, !forceRefresh && useCache, cacheMaxAge);
+      
+      console.log('Batch optimization completed:', result);
     } catch (err) {
+      console.error('Batch optimization error:', err);
       setError(handleApiError(err));
     }
   };
@@ -122,6 +162,46 @@ export default function PricingRecommendationsPage() {
       case "high": return <AlertTriangle className="h-4 w-4 text-red-600" />;
       default: return <Info className="h-4 w-4" />;
     }
+  };
+
+  const getPsychologicalBadge = (analysis: PsychologicalAnalysis | undefined) => {
+    if (!analysis) return null;
+    
+    const { consumer_perception, behavioral_score } = analysis;
+    
+    switch (consumer_perception) {
+      case "extremely_positive":
+        return <Badge className="bg-emerald-100 text-emerald-900 border-emerald-300 font-bold">🚀 Extremely Positive</Badge>;
+      case "highly_positive":
+        return <Badge className="bg-green-100 text-green-800 border-green-200 font-semibold">✨ Highly Positive</Badge>;
+      case "positive":
+        return <Badge className="bg-green-100 text-green-700 border-green-200">👍 Positive</Badge>;
+      case "slightly_positive":
+        return <Badge className="bg-lime-100 text-lime-800 border-lime-200">📈 Slightly Positive</Badge>;
+      case "neutral":
+        return <Badge variant="outline">😐 Neutral</Badge>;
+      case "slightly_negative":
+        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">⚠️ Caution</Badge>;
+      case "negative":
+        return <Badge className="bg-red-100 text-red-800 border-red-200">👎 Negative</Badge>;
+      case "extremely_negative":
+        return <Badge className="bg-red-200 text-red-900 border-red-400 font-bold">🚫 Extremely Negative</Badge>;
+      default:
+        return <Badge variant="outline">❓ Unknown</Badge>;
+    }
+  };
+
+  const getPsychologicalEffectsText = (effects: string[]) => {
+    const effectLabels: Record<string, string> = {
+      "charm_pricing": "Charm Pricing (.95/.99)",
+      "prestige_pricing": "Prestige Pricing (Round)",
+      "left_digit_bias_positive": "Left-Digit Advantage",
+      "left_digit_bias_negative": "Left-Digit Disadvantage",
+      "minimal_change": "Minimal Change",
+      "significant_increase": "Significant Increase"
+    };
+    
+    return effects.map(effect => effectLabels[effect] || effect).join(", ");
   };
 
   const filteredRecommendations = recommendations.filter(rec => {
@@ -212,9 +292,20 @@ export default function PricingRecommendationsPage() {
                 </div>
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-2">
-                    <Brain className="h-4 w-4" />
-                    <Label htmlFor="psychological-pricing-toggle">Psychological Pricing</Label>
-                    <Switch id="psychological-pricing-toggle" checked={enablePsychologicalPricing} onCheckedChange={setEnablePsychologicalPricing} />
+                    <Brain className={`h-4 w-4 ${enablePsychologicalPricing ? 'text-purple-600' : 'text-gray-400'}`} />
+                    <Label htmlFor="psychological-pricing-toggle" className={enablePsychologicalPricing ? 'text-purple-700 font-medium' : ''}>
+                      Psychological Pricing
+                    </Label>
+                    <Switch 
+                      id="psychological-pricing-toggle" 
+                      checked={enablePsychologicalPricing} 
+                      onCheckedChange={setEnablePsychologicalPricing} 
+                    />
+                    {enablePsychologicalPricing && (
+                      <Badge variant="secondary" className="bg-purple-100 text-purple-800 text-xs">
+                        Active
+                      </Badge>
+                    )}
                   </div>
                   <div className="flex items-center space-x-2">
                     <Target className="h-4 w-4" />
@@ -241,6 +332,24 @@ export default function PricingRecommendationsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {enablePsychologicalPricing && (
+                <div className="mb-4 p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
+                  <div className="flex items-start space-x-2">
+                    <Brain className="h-5 w-5 text-purple-600 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-purple-900 dark:text-purple-100 text-sm">
+                        Psychological Pricing Analysis Active
+                      </h4>
+                      <p className="text-xs text-purple-700 dark:text-purple-300 mt-1">
+                        Prices are optimized using behavioral psychology principles including charm pricing (.95/.99), 
+                        left-digit bias, category-specific consumer expectations, and brand positioning psychology. 
+                        Each recommendation includes a behavioral impact score and consumer perception analysis.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                 <div>
                   <Label className="text-sm font-medium mb-2 block">Category</Label>
@@ -406,6 +515,7 @@ export default function PricingRecommendationsPage() {
                     <TableHead>Recommended Price</TableHead>
                     <TableHead>Change</TableHead>
                     <TableHead>Monthly Uplift</TableHead>
+                    {enablePsychologicalPricing && <TableHead>Psychology</TableHead>}
                     <TableHead>Risk</TableHead>
                     <TableHead>Confidence</TableHead>
                     <TableHead>Actions</TableHead>
@@ -440,6 +550,21 @@ export default function PricingRecommendationsPage() {
                         <TableCell className="text-green-600 font-medium">
                           {formatters.currency(rec.expected_profit_change)}
                         </TableCell>
+                        {enablePsychologicalPricing && (
+                          <TableCell>
+                            <div className="space-y-1">
+                              {getPsychologicalBadge(rec.psychological_analysis)}
+                              {rec.psychological_analysis && (
+                                <div className="text-xs text-muted-foreground">
+                                  Score: {rec.psychological_analysis.behavioral_score}
+                                  {rec.psychological_analysis.left_digit_changed && (
+                                    <div className="text-blue-600">Left-digit change</div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                        )}
                         <TableCell>
                           <div className="flex items-center space-x-1">
                             {getRiskIcon(rec.risk_level)}
@@ -509,6 +634,116 @@ export default function PricingRecommendationsPage() {
                                     </div>
                                   </div>
 
+                                  {/* Psychological Analysis */}
+                                  {enablePsychologicalPricing && selectedProduct.psychological_analysis && (
+                                    <div>
+                                      <h4 className="font-medium mb-3 flex items-center">
+                                        <Brain className="mr-2 h-4 w-4" />
+                                        Psychological Pricing Analysis
+                                      </h4>
+                                      <div className="space-y-4">
+                                        {/* Overall Impact */}
+                                        <div className="grid grid-cols-2 gap-4">
+                                          <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 p-4 rounded-lg border">
+                                            <div className="flex items-center justify-between mb-2">
+                                              <span className="text-sm font-medium">Consumer Perception</span>
+                                              {getPsychologicalBadge(selectedProduct.psychological_analysis)}
+                                            </div>
+                                            <div className="text-2xl font-bold text-blue-600">
+                                              {selectedProduct.psychological_analysis.behavioral_score > 0 ? '+' : ''}
+                                              {selectedProduct.psychological_analysis.behavioral_score}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground">Behavioral Score</div>
+                                          </div>
+                                          <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 p-4 rounded-lg border">
+                                            <div className="text-sm font-medium mb-2">Recommendation Strength</div>
+                                            <div className="text-lg font-bold capitalize text-green-600">
+                                              {selectedProduct.psychological_analysis.recommendation_strength.replace('_', ' ')}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground">
+                                              Based on behavioral factors
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        {/* Price Psychology Details */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                          <div className="space-y-3">
+                                            <h5 className="font-medium text-sm">Price Structure Analysis</h5>
+                                            <div className="space-y-2 text-sm">
+                                              <div className="flex justify-between">
+                                                <span className="text-muted-foreground">Original ending:</span>
+                                                <span className="font-mono">.{selectedProduct.psychological_analysis.original_ending.toString().padStart(2, '0')}</span>
+                                              </div>
+                                              <div className="flex justify-between">
+                                                <span className="text-muted-foreground">Optimized ending:</span>
+                                                <span className="font-mono font-bold text-blue-600">.{selectedProduct.psychological_analysis.psych_ending.toString().padStart(2, '0')}</span>
+                                              </div>
+                                              <div className="flex justify-between">
+                                                <span className="text-muted-foreground">Left-digit change:</span>
+                                                <span className={selectedProduct.psychological_analysis.left_digit_changed ? "text-green-600 font-medium" : "text-gray-500"}>
+                                                  {selectedProduct.psychological_analysis.left_digit_changed ? "Yes ✓" : "No"}
+                                                </span>
+                                              </div>
+                                            </div>
+                                          </div>
+                                          
+                                          <div className="space-y-3">
+                                            <h5 className="font-medium text-sm">Category Factors</h5>
+                                            <div className="space-y-2 text-sm">
+                                              <div className="flex justify-between">
+                                                <span className="text-muted-foreground">Price sensitivity:</span>
+                                                <Badge variant="outline" className="capitalize">
+                                                  {selectedProduct.psychological_analysis.category_factors.price_sensitivity}
+                                                </Badge>
+                                              </div>
+                                              <div className="flex justify-between">
+                                                <span className="text-muted-foreground">Brand importance:</span>
+                                                <Badge variant="outline" className="capitalize">
+                                                  {selectedProduct.psychological_analysis.category_factors.brand_importance}
+                                                </Badge>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        {/* Psychological Effects */}
+                                        {selectedProduct.psychological_analysis.psychological_effects.length > 0 && (
+                                          <div>
+                                            <h5 className="font-medium text-sm mb-2">Applied Psychological Effects</h5>
+                                            <div className="flex flex-wrap gap-2">
+                                              {selectedProduct.psychological_analysis.psychological_effects.map((effect, index) => (
+                                                <Badge key={index} variant="secondary" className="text-xs">
+                                                  {getPsychologicalEffectsText([effect])}
+                                                </Badge>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
+
+                                        {/* Behavioral Insights */}
+                                        <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded border-l-4 border-amber-400">
+                                          <h5 className="font-medium text-amber-900 dark:text-amber-100 mb-1 flex items-center">
+                                            <Zap className="mr-1 h-4 w-4" />
+                                            Behavioral Insights
+                                          </h5>
+                                          <p className="text-sm text-amber-800 dark:text-amber-200">
+                                            {selectedProduct.psychological_analysis.consumer_perception === 'highly_positive' && 
+                                              "This pricing change leverages strong psychological triggers that should positively influence consumer perception and purchase decisions."}
+                                            {selectedProduct.psychological_analysis.consumer_perception === 'positive' && 
+                                              "The psychological factors work in your favor, creating a favorable impression with consumers."}
+                                            {selectedProduct.psychological_analysis.consumer_perception === 'neutral' && 
+                                              "The pricing change has minimal psychological impact - consider if the business benefits justify the change."}
+                                            {selectedProduct.psychological_analysis.consumer_perception === 'slightly_negative' && 
+                                              "Some psychological factors may work against you. Consider alternative pricing strategies."}
+                                            {selectedProduct.psychological_analysis.consumer_perception === 'negative' && 
+                                              "The psychological impact is unfavorable. This pricing change may negatively affect consumer perception."}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+
                                   {/* Rationale */}
                                   <div>
                                     <h4 className="font-medium mb-2">AI Rationale</h4>
@@ -565,7 +800,7 @@ export default function PricingRecommendationsPage() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={enablePsychologicalPricing ? 9 : 8} className="text-center py-8 text-muted-foreground">
                         {loading ? 'Generating recommendations...' : 'No recommendations available. Try running optimization.'}
                       </TableCell>
                     </TableRow>

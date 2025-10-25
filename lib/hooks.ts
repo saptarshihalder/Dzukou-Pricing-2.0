@@ -161,12 +161,14 @@ export function usePriceOptimization() {
     risk_level: 'low' | 'medium' | 'high';
     confidence_score: number;
     scenarios: {
-      conservative: { price: number; expected_margin: number };
-      recommended: { price: number; expected_margin: number };
-      aggressive: { price: number; expected_margin: number };
+      conservative: { price: number; expected_margin: number; psychological_analysis?: any };
+      recommended: { price: number; expected_margin: number; psychological_analysis?: any };
+      aggressive: { price: number; expected_margin: number; psychological_analysis?: any };
     };
     rationale: string;
     constraint_flags: string[];
+    psychological_analysis?: any;
+    psychological_pricing_enabled?: boolean;
   }>>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

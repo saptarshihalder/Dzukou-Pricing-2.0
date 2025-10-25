@@ -1,8 +1,15 @@
 # 🚀 Price Optimizer AI
 
-An intelligent pricing optimization platform for sustainable and eco-conscious businesses. Combines competitive price intelligence with AI-powered market insights to generate data-driven pricing recommendations.
+An intelligent pricing optimization platform for sustainable and eco-conscious businesses. Combines competitive price intelligence with **advanced psychological pricing** and AI-powered market insights to generate data-driven pricing recommendations.
 
 ## ✨ Key Features
+
+### 🧠 **Advanced Psychological Pricing** (NEW!)
+- **Behavioral Psychology Engine**: Applies charm pricing, prestige pricing, and left-digit bias
+- **Category-Specific Strategies**: Fashion (+8% premium), Luxury (+5% premium), Value (-3% discount)
+- **Consumer Perception Analysis**: Behavioral scoring from -50 to +50 with detailed insights
+- **Dramatic Price Optimization**: Creates significantly different pricing based on human psychology
+- **Real-time Impact Assessment**: Shows consumer perception and recommendation strength
 
 ### 🎯 **Core Pricing Intelligence**
 - **Competitor Price Scraping**: Automated monitoring of 15+ eco-conscious stores
@@ -10,7 +17,7 @@ An intelligent pricing optimization platform for sustainable and eco-conscious b
 - **Market Analysis**: Category and store-based competitive intelligence
 - **Real-time Progress**: Live monitoring of scraping operations
 
-### 🤖 **AI-Enhanced Insights** (NEW!)
+### 🤖 **AI-Enhanced Insights**
 - **LLM Integration**: Google Gemini API for advanced market analysis
 - **Smart Positioning**: AI-powered brand positioning recommendations
 - **Demand Elasticity**: Intelligent price sensitivity assessment
@@ -20,6 +27,7 @@ An intelligent pricing optimization platform for sustainable and eco-conscious b
 ### 🎨 **Modern Web Interface**
 - **React/Next.js Frontend**: Responsive dashboard with real-time updates
 - **Shadcn/UI Components**: Beautiful, accessible component library
+- **Enhanced Psychology UI**: Visual behavioral analysis with emojis and detailed insights
 - **CSV Export**: Download recommendations for business analysis
 - **Progress Monitoring**: Live tracking of long-running operations
 
@@ -195,15 +203,23 @@ pnpm start
 
 ## 📈 Expected Results
 
+### Psychological Pricing Impact
+- **Fashion Items**: €57.95 → €61.95 (+6.9%, +€4.00) with charm pricing
+- **Luxury Items**: €114.95 → €131.25 (+14.18%, +€16.30!) with prestige pricing
+- **Value Items**: €25.95 → €24.79 (-4.47%, -€1.16) with aggressive charm pricing
+- **Behavioral Scores**: Range from -50 to +50 with detailed consumer perception analysis
+
 ### Confidence Improvements
 - **Without LLM**: 0.5-0.7 confidence
 - **With LLM**: 0.7-0.9 confidence
-- **AI Insights**: Smart positioning, elasticity, seasonality
+- **With Psychology**: Dramatic price differences based on human behavior
 
 ### Business Impact
-- **Data-Driven Pricing**: Replace guesswork with intelligence
-- **Competitive Advantage**: Real-time market awareness
-- **Margin Optimization**: Balance profitability and competitiveness
+- **Psychological Advantage**: Leverage human psychology for optimal pricing
+- **Category-Specific Strategies**: Different approaches for fashion, luxury, and value items
+- **Data-Driven Pricing**: Replace guesswork with behavioral intelligence
+- **Competitive Advantage**: Real-time market awareness with psychological insights
+- **Margin Optimization**: Balance profitability and consumer psychology
 - **Time Savings**: Automated analysis vs manual research
 
 ## 🤝 Contributing

@@ -92,6 +92,8 @@ export default function CompetitiveAnalysisPage() {
           fetchAPI<StoreAnalysis[]>('/routes/competitive-analysis/stores')
         ]);
 
+        console.log('Category data received:', categoryData);
+        console.log('Store data received:', storeData);
         setCategoryAnalysis(categoryData);
         setStoreAnalysis(storeData);
         setLastRefresh(new Date());
@@ -120,6 +122,8 @@ export default function CompetitiveAnalysisPage() {
 
   // Apply filters and sorting to category analysis
   useEffect(() => {
+    console.log('Applying filters to categoryAnalysis:', categoryAnalysis);
+    console.log('Current filters - searchTerm:', searchTerm, 'positionFilter:', positionFilter, 'sortBy:', sortBy);
     let filtered = [...categoryAnalysis];
     
     // Search filter
@@ -150,6 +154,7 @@ export default function CompetitiveAnalysisPage() {
       }
     });
     
+    console.log('Filtered results:', filtered);
     setFilteredCategoryAnalysis(filtered);
   }, [categoryAnalysis, searchTerm, positionFilter, sortBy]);
 
@@ -601,6 +606,12 @@ export default function CompetitiveAnalysisPage() {
                       {filteredCategoryAnalysis.length} of {categoryAnalysis.length} categories
                     </Badge>
                   </CardTitle>
+                  <div className="text-sm text-muted-foreground">
+                    Debug: Raw categories: {categoryAnalysis.map(c => c.category).join(', ')}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Debug: Filtered categories: {filteredCategoryAnalysis.map(c => c.category).join(', ')}
+                  </div>
                   <CardDescription>
                     Compare your pricing strategy across different product categories
                   </CardDescription>
@@ -769,6 +780,9 @@ export default function CompetitiveAnalysisPage() {
                   <CardDescription>
                     Compare pricing strategies across different competitor stores
                   </CardDescription>
+                  <div className="text-sm text-muted-foreground">
+                    Debug: Stores found: {storeAnalysis.map(s => s.store).join(', ')}
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {storeAnalysis.length > 0 ? (

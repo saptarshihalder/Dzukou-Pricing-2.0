@@ -796,6 +796,8 @@ async def optimize_price(payload: OptimizeSingleRequest, session: AsyncSession =
         scenarios=result["scenarios"],
         rationale=result["rationale"],
         constraint_flags=result["constraint_flags"],
+        psychological_analysis=result.get("psychological_analysis"),
+        psychological_pricing_enabled=result.get("psychological_pricing_enabled", False),
     )
     session.add(rec)
     await session.commit()
@@ -811,6 +813,9 @@ async def optimize_price(payload: OptimizeSingleRequest, session: AsyncSession =
         rationale=result["rationale"],
         rationale_sections=result.get("rationale_sections"),
         constraint_flags=result["constraint_flags"],
+        psychological_analysis=result.get("psychological_analysis"),
+        psychological_pricing_enabled=result.get("psychological_pricing_enabled", False),
+        llm_insights=result.get("llm_insights"),
     )
 
 

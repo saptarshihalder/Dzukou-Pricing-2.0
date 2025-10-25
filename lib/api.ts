@@ -21,16 +21,37 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
   };
 
   try {
-    const response = await fetch(url, config);
+    // Add timeout for long-running operations
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+    
+    const response = await fetch(url, {
+      ...config,
+      signal: controller.signal,
+    });
+    
+    clearTimeout(timeoutId);
     
     if (!response.ok) {
-      throw new ApiError(response.status, `HTTP error! status: ${response.status}`);
+      let errorMessage = `HTTP error! status: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        if (errorData.detail) {
+          errorMessage = errorData.detail;
+        }
+      } catch {
+        // Ignore JSON parsing errors for error responses
+      }
+      throw new ApiError(response.status, errorMessage);
     }
     
     return await response.json();
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;
+    }
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Request timeout - the operation took too long to complete');
     }
     throw new Error(`Network error: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
@@ -115,12 +136,14 @@ export const optimizationApi = {
         risk_level: 'low' | 'medium' | 'high';
         confidence_score: number;
         scenarios: {
-          conservative: { price: number; expected_margin: number };
-          recommended: { price: number; expected_margin: number };
-          aggressive: { price: number; expected_margin: number };
+          conservative: { price: number; expected_margin: number; psychological_analysis?: any };
+          recommended: { price: number; expected_margin: number; psychological_analysis?: any };
+          aggressive: { price: number; expected_margin: number; psychological_analysis?: any };
         };
         rationale: string;
         constraint_flags: string[];
+        psychological_analysis?: any;
+        psychological_pricing_enabled?: boolean;
       }>;
       cache_info: {
         cached_products: number;
@@ -145,12 +168,14 @@ export const optimizationApi = {
       risk_level: 'low' | 'medium' | 'high';
       confidence_score: number;
       scenarios: {
-        conservative: { price: number; expected_margin: number };
-        recommended: { price: number; expected_margin: number };
-        aggressive: { price: number; expected_margin: number };
+        conservative: { price: number; expected_margin: number; psychological_analysis?: any };
+        recommended: { price: number; expected_margin: number; psychological_analysis?: any };
+        aggressive: { price: number; expected_margin: number; psychological_analysis?: any };
       };
       rationale: string;
       constraint_flags: string[];
+      psychological_analysis?: any;
+      psychological_pricing_enabled?: boolean;
     }>('/routes/optimize-price', {
       method: 'POST',
       body: JSON.stringify({
@@ -179,12 +204,14 @@ export const optimizationApi = {
         risk_level: 'low' | 'medium' | 'high';
         confidence_score: number;
         scenarios: {
-          conservative: { price: number; expected_margin: number };
-          recommended: { price: number; expected_margin: number };
-          aggressive: { price: number; expected_margin: number };
+          conservative: { price: number; expected_margin: number; psychological_analysis?: any };
+          recommended: { price: number; expected_margin: number; psychological_analysis?: any };
+          aggressive: { price: number; expected_margin: number; psychological_analysis?: any };
         };
         rationale: string;
         constraint_flags: string[];
+        psychological_analysis?: any;
+        psychological_pricing_enabled?: boolean;
       }>;
     }>(url.pathname + url.search, {
       method: 'POST',

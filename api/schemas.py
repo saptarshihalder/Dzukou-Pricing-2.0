@@ -84,10 +84,12 @@ class PriceRecommendation(BaseModel):
     expected_profit_change: float
     risk_level: Literal["low", "medium", "high"]
     confidence_score: float
-    scenarios: dict[str, dict[str, float]]
+    scenarios: dict[str, dict]
     rationale: str
     rationale_sections: Optional[dict[str, Optional[str]]] = Field(None, description="Structured rationale sections")
     constraint_flags: list[str] = Field(default_factory=list)
+    psychological_analysis: Optional[dict] = Field(None, description="Psychological pricing analysis if enabled")
+    psychological_pricing_enabled: bool = Field(False, description="Whether psychological pricing was enabled")
     llm_insights: Optional[LLMInsights] = Field(None, description="LLM-generated market insights if available")
 
 

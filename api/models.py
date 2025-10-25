@@ -5,7 +5,7 @@ from datetime import datetime, UTC
 from enum import Enum as PyEnum
 from typing import Optional
 
-from sqlalchemy import JSON, TIMESTAMP, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, TIMESTAMP, Boolean, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .db import Base
@@ -88,6 +88,8 @@ class PriceRecommendation(Base):
     scenarios: Mapped[dict] = mapped_column(JSON, nullable=False)
     rationale: Mapped[str] = mapped_column(Text, nullable=False)
     constraint_flags: Mapped[list[str]] = mapped_column(JSON, default=list)
+    psychological_analysis: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    psychological_pricing_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), default=lambda: datetime.now(UTC))
 
     product: Mapped[Product] = relationship(back_populates="recommendations")
