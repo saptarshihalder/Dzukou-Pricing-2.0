@@ -98,7 +98,8 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
-  }, [optimizeBatch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const refreshPortfolioData = useCallback(async () => {
     try {
@@ -132,11 +133,13 @@ export default function Dashboard() {
     } finally {
       setRefreshingPortfolio(false);
     }
-  }, [optimizeBatch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     fetchDashboardData();
-  }, [optimizeBatch, fetchDashboardData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const getRiskBadgeVariant = (risk: string) => {
     switch (risk) {
